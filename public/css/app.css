@@ -1,0 +1,183 @@
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap");
+  
+:root {
+    --header-height: 2.5rem;
+    --nav-width: 68px;
+    --first-color: #545454;
+    --first-color-light: #f7f6fb;
+    --white-color: #f7f6fb;
+    --bg-header-menu: #cccccc;
+    --body-font: "Nunito", sans-serif;
+    --normal-font-size: 1rem;
+    --z-fixed: 100;
+}
+
+*,
+::before,
+::after {
+    box-sizing: border-box !important;
+}
+
+body {
+    position: relative !important;
+    margin: var(--header-height) 0 0 0 !important;
+    font-family: var(--body-font) !important;
+    font-size: var(--normal-font-size) !important;
+    transition: 0.5s !important;
+}
+
+.bg-header {
+    background-color: var(--first-color) !important;
+    border-bottom: 1px solid black
+}
+
+.bg-header-menu {
+    background-color: var(--bg-header-menu) !important;
+}
+
+a {
+    text-decoration: none !important;
+}
+
+.dataTables_filter {
+    float: left !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    padding: .5em .5em !important;
+}
+
+.dataTables_paginate {
+    float: left !important;
+}
+
+.paginate_input {
+    width: 3rem !important;
+}
+
+.toolbar {
+    float: left !important;
+    width: 100% !important;
+    margin-top: 1rem !important;
+}
+
+.header {
+    width: 100% !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    background-color: var(--white-color) !important;
+    z-index: var(--z-fixed) !important;
+    transition: 0.5s !important;
+}
+
+.header_toggle {
+    color: var(--first-color) !important;
+    font-size: 1.5rem !important;
+    cursor: pointer !important;
+}
+
+.l-navbar {
+    position: fixed !important;
+    left: -30% !important;
+    width: var(--nav-width) !important;
+    height: 100vh !important;
+    background-color: var(--first-color) !important;
+    padding: 0 1rem 0 0 !important;
+    transition: 0.5s !important;
+}
+
+.nav {
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    overflow: hidden !important;
+}
+
+.nav_logo,
+.nav_link {
+    display: grid !important;
+    grid-template-columns: max-content max-content !important;
+    align-items: center !important;
+    column-gap: 1rem !important;
+    padding: 0.5rem 0 0.5rem 1.5rem !important;
+}
+
+.nav_logo {
+    margin-bottom: 2rem !important;
+}
+
+.nav_logo-icon {
+    font-size: 1.25rem !important;
+    color: var(--white-color) !important;
+}
+
+.nav_logo-name {
+    color: var(--white-color) !important;
+    font-weight: 700 !important;
+}
+
+.nav_link {
+    position: relative !important;
+    color: var(--first-color-light) !important;
+    margin-bottom: 1.5rem !important;
+    transition: 0.3s !important;
+}
+
+.nav_link:hover {
+    color: var(--white-color) !important;
+}
+
+.nav_icon {
+    font-size: 1.25rem !important;
+}
+
+.showNav {
+    left: 0 !important;
+}
+
+.active {
+    color: var(--white-color) !important;
+}
+
+.active::before {
+    content: "" !important;
+    position: absolute !important;
+    left: 0 !important;
+    width: 2px !important;
+    height: 32px !important;
+    background-color: var(--white-color) !important;
+}
+
+.main {
+    transition: 0.5s !important;
+    z-index: var(--z-fixed) !important;
+}
+
+.pb-time {
+    padding-bottom: 6rem !important;
+}
+
+@media screen and (min-width: 768px) {
+    body {
+    padding-left: calc(var(--nav-width)) !important;
+    }
+
+    .l-navbar {
+    left: 0 !important;
+    padding: 0 1rem 0 0 !important;
+    }
+
+    .showNav {
+    width: calc(var(--nav-width) + 156px) !important;
+    }
+
+    .main-content-width {
+    margin-left: calc(var(--nav-width) + 5.5rem) !important;
+    transition: 0.5s !important;
+    }
+}
