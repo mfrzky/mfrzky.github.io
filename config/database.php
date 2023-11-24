@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'default' => env('DB_CONNECTION', 'mysql'),
+    'default' => env('DB_CONNECTION', 'firebird'),
 
     /*
     |--------------------------------------------------------------------------
@@ -91,6 +91,17 @@ return [
             'prefix_indexes' => true,
             // 'encrypt' => env('DB_ENCRYPT', 'yes'),
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
+        ],
+
+        'firebird' => [
+            'driver'   => 'firebird',
+            'host'     => env('DB_HOST', 'localhost'),
+            'port'     => env('DB_PORT', '3050'),
+            'database' => env('DB_DATABASE', 'D:\Nextgen\Database\TRIMITRA.FDB'),
+            'username' => env('DB_USERNAME', 'SYSDBA'),
+            'password' => env('DB_PASSWORD', 'masterkey'),
+            'charset'  => env('DB_CHARSET', 'UTF8'),
+            'role'     => null,
         ],
 
     ],

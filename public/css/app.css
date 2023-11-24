@@ -1,14 +1,14 @@
 @import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap");
   
 :root {
-    --header-height: 2.5rem;
+    --header-height: 2.2rem;
     --nav-width: 68px;
     --first-color: #545454;
     --first-color-light: #f7f6fb;
     --white-color: #f7f6fb;
     --bg-header-menu: #cccccc;
     --body-font: "Nunito", sans-serif;
-    --normal-font-size: 1rem;
+    --normal-font-size: .8rem;
     --z-fixed: 100;
 }
 
@@ -39,6 +39,13 @@ a {
     text-decoration: none !important;
 }
 
+.dataTables_scrollHeadInner {
+    width: 100% !important;
+    }
+    .dataTables_scrollHeadInner table {
+    width: 100% !important;
+    }
+    
 .dataTables_filter {
     float: left !important;
 }
@@ -49,16 +56,17 @@ a {
 
 .dataTables_paginate {
     float: left !important;
+    display: block !important;
 }
 
 .paginate_input {
-    width: 3rem !important;
+    width: 4rem !important;
 }
 
 .toolbar {
     float: left !important;
     width: 100% !important;
-    margin-top: 1rem !important;
+    margin-top: .2rem !important;
 }
 
 .header {
@@ -112,13 +120,14 @@ a {
 }
 
 .nav_logo-icon {
-    font-size: 1.25rem !important;
+    font-size: 1rem !important;
     color: var(--white-color) !important;
 }
 
 .nav_logo-name {
     color: var(--white-color) !important;
     font-weight: 700 !important;
+    font-size: 1rem !important;
 }
 
 .nav_link {
@@ -162,22 +171,42 @@ a {
     padding-bottom: 6rem !important;
 }
 
+.dataTables_filter input { height: 1.5em }
+
+tr { height: .5em }
+
+table.dataTable>thead>tr>th, table.dataTable>thead>tr>td {
+    padding: 0 !important;
+}
+
+table.dataTable tbody th, table.dataTable tbody td {
+    padding: 0 10px !important;
+}
+
+#loading-indicator {
+    display: none;
+}
+
+.input-font-size {
+    font-size: 12px !important;
+}
+
 @media screen and (min-width: 768px) {
     body {
-    padding-left: calc(var(--nav-width)) !important;
+        padding-left: calc(var(--nav-width)) !important;
     }
 
     .l-navbar {
-    left: 0 !important;
-    padding: 0 1rem 0 0 !important;
+        left: 0 !important;
+        padding: 0 1rem 0 0 !important;
     }
 
     .showNav {
-    width: calc(var(--nav-width) + 156px) !important;
+        width: calc(var(--nav-width) + 156px) !important;
     }
 
     .main-content-width {
-    margin-left: calc(var(--nav-width) + 5.5rem) !important;
-    transition: 0.5s !important;
+        margin-left: calc(var(--nav-width) + 5.5rem) !important;
+        transition: 0.5s !important;
     }
 }
