@@ -163,12 +163,13 @@ a {
 }
 
 .main {
+    margin-left: calc(var(--nav-width) + 5.5rem) !important;
     transition: 0.5s !important;
     z-index: var(--z-fixed) !important;
 }
 
 .pb-time {
-    padding-bottom: 6rem !important;
+    padding-bottom: 5rem !important;
 }
 
 .dataTables_filter input { height: 1.5em }
@@ -206,7 +207,7 @@ table.dataTable tbody th, table.dataTable tbody td {
     }
 
     .main-content-width {
-        margin-left: calc(var(--nav-width) + 5.5rem) !important;
+        margin-left: calc(var(--nav-width) + ) !important;
         transition: 0.5s !important;
     }
 }

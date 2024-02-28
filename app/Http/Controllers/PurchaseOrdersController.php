@@ -19,9 +19,14 @@ class PurchaseOrdersController extends Controller
         
         $idsupplier = session('user')->IDSUPPLIER;
         if($request->ajax()){
-            $getPoList = DB::table('PCL_PURCHASEORDER')
-                         ->where('IDSUPPLIER', $idsupplier)
-                         ->orderBy('TANGGALPO','DESC');
+            $sql = 'SELECT * 
+                    FROM PCL_PURCHASEORDER 
+                    INNER JOIN PCS_PURCHASEORDER ON PCS_PURCHASEORDER.IDPO = PCL_PURCHASEORDER.IDPO 
+                    WHERE PCL_PURCHASEORDER.IDSUPPLIER = ? 
+                    AND PCS_PURCHASEORDER.WEBSTATUS = ? 
+                    ORDER BY PCL_PURCHASEORDER.TANGGALPO DESC';
+            $getPoList = DB::select($sql, array($idsupplier, 'O'));
+            
             return DataTables::of($getPoList)->make(true);
         }
 
@@ -46,6 +51,10 @@ class PurchaseOrdersController extends Controller
                      ->where('IDPO',$idPO)
                      ->get();
 
+        foreach ($getPoItem as $key => $item) {
+            $getPoItem[$key] = array_map('utf8_encode', (array) $item);
+        }
+        
         return response()->json($getPoItem);
     }
 
@@ -74,21 +83,28 @@ class PurchaseOrdersController extends Controller
 
     public function indexItemBonPenerimaanBarang(Request $request) {
         $id = $request->get('id');
-        $getBpbItem = DB::table('WHS_STOCKIN')
-                     ->join('WHS_STOCKINITEM', 'WHS_STOCKIN.IDSTOCKIN', '=', 'WHS_STOCKINITEM.IDSTOCKIN')
-                     ->leftJoin('VDR_SURATJALANITEM', 'WHS_STOCKIN.IDPO', '=', 'VDR_SURATJALANITEM.IDPO')
-                     ->join('PCS_REFBARANGMERK', 'WHS_STOCKINITEM.IDBARANGMERK', '=', 'PCS_REFBARANGMERK.IDBARANGMERK')
-                     ->join('INV_REFSATUAN', 'WHS_STOCKINITEM.IDSATUAN', '=', 'INV_REFSATUAN.IDSATUAN')
-                     ->select(
-                        'WHS_STOCKIN.*', 
-                        'INV_REFSATUAN.DESKRIPSI AS SATUAN', 
-                        'VDR_SURATJALANITEM.QUANTITY AS QTY_SJ',
-                        'VDR_SURATJALANITEM.NOSJ', 
-                        'PCS_REFBARANGMERK.BARANGTIPE',
-                        'PCS_REFBARANGMERK.IDBARANG', 
-                        'WHS_STOCKINITEM.QUANTITY AS QTY_BPB')
-                     ->where('WHS_STOCKIN.IDPO',$id)
-                     ->get();
+        $sql = 'SELECT
+                    "WHS_STOCKIN".*,
+                    "INV_REFSATUAN"."DESKRIPSI" AS "SATUAN",
+                    "PCS_REFBARANGMERK"."BARANGTIPE",
+                    "PCS_REFBARANGMERK"."IDBARANG",
+                    "D"."QUANTITY" AS "QTY_BPB",
+                    "C"."QUANTITY" AS "QTY_SJ"
+                FROM WHS_STOCKIN
+                INNER JOIN (
+                    SELECT NOSJ, IDBARANGMERK, SUM(QUANTITY) AS QUANTITY
+                    FROM VDR_SURATJALANITEM
+                    GROUP BY NOSJ, IDBARANGMERK
+                ) C ON (WHS_STOCKIN.NOSJ = C.NOSJ)
+                INNER JOIN (
+                    SELECT IDSTOCKIN, IDBARANGMERK, IDSATUAN, SUM(QUANTITY) AS QUANTITY
+                    FROM WHS_STOCKINITEM
+                    GROUP BY IDSTOCKIN, IDBARANGMERK, IDSATUAN
+                ) D ON (WHS_STOCKIN.IDSTOCKIN = D.IDSTOCKIN AND C.IDBARANGMERK = D.IDBARANGMERK)
+                INNER JOIN "PCS_REFBARANGMERK" ON D."IDBARANGMERK" = "PCS_REFBARANGMERK"."IDBARANGMERK"
+                INNER JOIN "INV_REFSATUAN" ON D."IDSATUAN" = "INV_REFSATUAN"."IDSATUAN"
+                WHERE WHS_STOCKIN."IDPO" = ?';
+        $getBpbItem = DB::select($sql, array($id));
 
         return response()->json($getBpbItem);
     }

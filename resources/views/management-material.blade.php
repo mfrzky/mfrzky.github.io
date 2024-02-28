@@ -274,6 +274,25 @@
     document.body.appendChild(iframe);
   }
 
+  $('#idStock').on('focusout', function() {
+    var inputValue = $(this).val();
+
+    $.ajax({
+        url: "{{ route('management-material.indexStockCodeSearch') }}",  // Replace with your actual backend endpoint
+        method: 'POST', 
+        headers: {
+          'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+        },
+        data: { inputValue: inputValue },
+        success: function(response) {
+          $('#grupManagementMaterial').val(response.data[0].IDSTOCKGROUP);
+        },
+        error: function(error) {
+            console.error('Error fetching data:', error);
+        }
+    });
+  });
+
   $('#btnAddStockCode').on('click', function() {
     $('#ModalStockCode').modal('hide');
     $('#ModalAddList').modal('show');
@@ -316,7 +335,7 @@
             type: 'success',
             title: 'Item Berhasil Ditambahkan!',
           }).then(function(){
-  
+            location.reload()
           });
         }
       }

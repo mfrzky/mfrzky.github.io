@@ -29,7 +29,7 @@
     </style>
 </head>
     <body>  
-        <p><span style="color: black;">Dari : </span>{{session('user')->EMAIL ? session('user')->EMAIL : 'User'}}</p>
+        <p><span style="color: black;">Dari : </span>{{session('supplier')->NAMA ? session('supplier')->NAMA : ''}}</p>
         <div>
             <div>
                 <ul class="p-0 m-0 list-unstyled" style="list-style: none; padding: 0;">

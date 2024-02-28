@@ -23,14 +23,15 @@
             @page {
                 width: 148mm;
                 height: 210mm;
-                margin: 2mm;
+                margin: 6mm;
             }
 
             @media print {
                 thead { display: table-header-group; }
-                /* .table-print {
-                    page-break-before: always;
-                } */
+                @page {
+                    size: A5 !important;
+                    margin: 6mm;
+                }
             }
 
             ul {
@@ -49,11 +50,11 @@
             }
 
             .page-header, .page-header-space {
-                height: 155px;
+                height: 150px;
             }
 
             .page-footer, .page-footer-space {
-                height: 160px;
+                height: 140px;
             }
 
             .page-header {
@@ -61,11 +62,18 @@
                 top: 0;
                 width: 100%;
             }
-
-            .page-content {
-                margin-top: 120px;
-                width: 100%;
-            }
+            
+            @if ($printPoData->ALAMAT)
+                .page-content {
+                    margin-top: 136px;
+                    width: 100%;
+                }
+            @else
+                .page-content {
+                    margin-top: 136px;
+                    width: 100%;
+                }
+            @endif
 
             .page-content-space {
                 margin-top: 120px;
@@ -106,6 +114,10 @@
                 margin: 1em 0;
                 padding: 0;
                 opacity: 1 !important;
+            }
+
+            .text-justify {
+                text-align: justify;
             }
 
             @-moz-document url-prefix() {
@@ -183,11 +195,15 @@
                 
                 <hr class="p-0 m-0">
                 <div class="d-flex justify-content-between">
-                    <p class="font-11 w-50 fw-bold p-0 m-0">
-                        {{$printPoData->NAMA_VENDOR}},<br> {{$printPoData->ALAMAT}}
+                    <p class="font-11 w-75 fw-bold p-0 m-0">
+                        @if ($printPoData->ALAMAT)
+                            {{$printPoData->NAMA_VENDOR}},<br> {{$printPoData->ALAMAT}}
+                        @else
+                            {{$printPoData->NAMA_VENDOR}}
+                        @endif
                     </p>
-                    <div class="row w-75 ms-5">
-                        <div class="col-4 col-sm-5 p-0 m-0">
+                    <div class="row w-75">
+                        <div class="col-4 col-sm-4 p-0 m-0">
                             <p class="font-10 fw-bold p-0 m-0">Term of Payment</p>
                             <p class="font-10 fw-bold p-0 m-0">{{$printPoData->DAYS}} Days</p>
                         </div>
@@ -228,38 +244,46 @@
                             <td class="p-0">{{$item->BARANGTIPE}}</td>
                             <td class="p-0 text-end pe-3">{{number_format((float)$item->QUANTITY , 0 , '.' , ',' )}}</td>
                             <td class="p-0">{{$item->IDBARANG}}</td>
-                            <td class="p-0 text-end">{{number_format((float)$item->HARGA , 0 , '.' , ',' )}}</td>
-                            <td class="p-0 text-end">{{number_format((float)$item->HARGA * $item->QUANTITY, 0 , '.' , ',' )}}</td>
+                            <td class="p-0 text-end">{{number_format((float)$item->HARGA , 2 , '.' , ',' )}}</td>
+                            <td class="p-0 text-end">{{number_format((float)$item->HARGA * $item->QUANTITY, 2 , '.' , ',' )}}</td>
+                        </tr>
+
+                        <tr>
+                            <td class="p-0" colspan="1"></td> {{-- Kolom tambahan untuk menyusun PR_DETAIL di bawah BARANGTIPE --}}
+                            <td class="p-0 w-50 text-justify">{{$item->PR_DETAIL}}</td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
     
             <div class="float-end subtotal">
-                <ul>
-                    <li><b>Subtotal</b>: {{$printPoData->TOTAL_PO ? number_format((float)$printPoData->TOTAL_PO, 0 , '.' , ',' ) : 0}}</li>
+                <ul class="text-end">
+                    <li><b>Subtotal</b>: {{$printPoData->TOTAL_PO ? number_format((float)$printPoData->TOTAL_PO, 2 , '.' , ',' ) : 0}}</li>
                     @if ($printPoData->DISCPERCENT != 0)
-                        <li><b>Discount {{$printPoData->DISCPERCENT}}</b>: {{$printPoData->DISCPERCENT * $subtotal}}</li>
+                        <li><b>Discount {{$printPoData->DISCPERCENT}}</b>: {{number_format((float)$printPoData->DISCPERCENT * $subtotal , 2 , '.' , ',' )}}</li>
                     @elseif($printPoData->DISCAMOUNT != 0)
-                        <li><b>Discount</b>: {{$printPoData->DISCAMOUNT}}</li>
+                        <li><b>Discount</b>: {{number_format((float)$printPoData->DISCAMOUNT , 2 , '.' , ',' )}}</li>
                     @else
                         <div></div>
                     @endif
-                    <li><b>Netto</b>: {{$netto ? number_format((float)$netto, 0 , '.' , ',' ) : 0}}</li>
+                    <li><b>Netto</b>: {{$netto ? number_format((float)$netto, 2 , '.' , ',' ) : 0}}</li>
                     <li>
                         <b>
                             PPN {{$printPoData->PCT_PPN ? $printPoData->PCT_PPN * 100 : 10}}%
                         </b>: 
-                        {{$printPoData->NILAIPPN ? number_format((float)$printPoData->NILAIPPN * 100 , 0 , '.' , ',' ) : 0}}
+                        {{$printPoData->NILAIPPN ? number_format((float)$printPoData->NILAIPPN , 2 , '.' , ',' ) : 0}}
                     </li>
                     @if ($printPoData->FPPNPBBKB != 'N')
                         <li>
-                            <b>PBBKB</b>: {{$printPoData->PPNPBBKB}}
+                            <b>PBBKB</b>: {{number_format((float)$getPpnPbbkpb->PPNPBBKB, 2 , '.' , ',' )}}
+                        </li>
+                        <li>
+                            <b>Total</b>: {{$netto && $printPoData->NILAIPPN ? number_format((float)$netto + $printPoData->NILAIPPN + $getPpnPbbkpb->PPNPBBKB, 2 , '.' , ',' ) : 0}}
                         </li>
                     @else
                         <div></div>
+                        <li><b>Total</b>: {{$netto && $printPoData->NILAIPPN ? number_format((float)$netto + $printPoData->NILAIPPN, 2 , '.' , ',' ) : 0}}</li>
                     @endif
-                    <li><b>Total</b>: {{$netto && $printPoData->NILAIPPN ? number_format((float)$netto + $printPoData->NILAIPPN, 0 , '.' , ',' ) : 0}}</li>
                 </ul>
             </div>
         </div>

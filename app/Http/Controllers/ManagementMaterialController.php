@@ -38,6 +38,19 @@ class ManagementMaterialController extends Controller {
         return view('management-material');
     }
 
+    public function indexStockCodeSearch(Request $request) {
+        if($request->ajax()){
+            $getStockCode = DB::table('INV_REFSTOCK')
+                            ->where('IDSTOCKTYPE', 'M')
+                            ->where('IDSTOCK', $request['inputValue'])
+                            ->get();
+
+            return DataTables::of($getStockCode)->make(true);
+        }
+
+        return view('management-material');
+    }
+
     public function addManagementMaterial(Request $request) {
         $validator = Validator::make($request->all(), [
             'TYPE' => ['required'],

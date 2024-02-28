@@ -26,6 +26,11 @@ Route::post('/login', 'LoginController@check_login')->name('login.check_login');
 Route::get('/change-password','LoginController@changePassword')->name('login.changePassword');
 Route::post('/change-password-post','LoginController@postChangePassword')->name('login.postChangePassword');
 
+// ADMIN
+Route::get('/admin', 'AdminController@index')->name('admin-menu.index');
+Route::post('/email-vendor', 'AdminController@changeEmailVendor')->name('email-vendor.changeEmailVendor');
+
+
 // ----------------PURCHASE ORDERS----------------
 Route::get('/purchase-orders', 'PurchaseOrdersController@index')->name('purchase-orders.index');
 Route::get('/purchase-orders-id', 'PurchaseOrdersController@indexPoById')->name('purchase-orders.indexPoById');
@@ -82,6 +87,7 @@ Route::get('/download/{filename}', 'DtsController@downloadFile')->name('dts.down
 // ----------------MANAGEMENT MATERIAL----------------
 Route::get('/management-material', 'ManagementMaterialController@index')->name('management-material.index');
 Route::get('/management-material/stock-code', 'ManagementMaterialController@indexStockCode')->name('management-material.indexStockCode');
+Route::post('/management-material/stock-code/search', 'ManagementMaterialController@indexStockCodeSearch')->name('management-material.indexStockCodeSearch');
 
 // Add
 Route::post('/management-material/add', 'ManagementMaterialController@addManagementMaterial')->name('management-material.addManagementMaterial');
@@ -98,6 +104,6 @@ Route::get('/prnpriview/management-material','PrintController@prnpriviewManageme
 Route::get('/prnpriview/laporan','PrintController@prnpriviewLaporan')->name('print.prnpriviewLaporan');
 
 // ----------------SEND EMAIL----------------
-Route::get('/send-email','SendEmailController@index')->name('email.sendEmail');
+Route::get('/send-email','SendEmailController@indexSuratJalan')->name('email.sendEmailSJ');
 
 Route::get('/dbimage/{id}','PrintController@getImage')->name('purchase-orders-print.getImage');

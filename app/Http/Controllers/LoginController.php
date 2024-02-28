@@ -29,6 +29,7 @@ class LoginController extends Controller
                 ->withErrors($validator);
                 Redirect::back()->withInput($request->all())->withErrors($validator);
         } else {
+            // dd(Hash::make('19730425'));
             $checkUser = DB::table('PCL_REFSUPPLIEREMAIL')->where('EMAIL', '=', $request->email)->first();
 
             if (Hash::check($request->password, $checkUser->PASSWORD)) {

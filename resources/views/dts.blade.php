@@ -27,25 +27,29 @@
         <table id="dts-list" class="display cell-border" cellspacing="0" width="100%">
             <thead>
                 <tr>
-                    <th></th>
+                    <!-- <th>No.</th> -->
                     <th>Title</th>
+                    <th>Download At</th>
+                    <th>Last Download</th>
                     <th>Action</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach ($files as $key => $file)
-                @if ($file !== '.' && $file !== '..')
+                @if (isset($files) && $files)
+                    @foreach ($filesWithDownloadInfo as $key => $file)
                         <tr>
-                            <td class="text-center" style="width:5%;">{{$key - 1}}</td>
-                            <td>{{$file}}</td>
+                            <!-- <td class="text-center" style="width:5%;"></td> -->
+                            <td>{{$key}}</td>
+                            <td>{{ $file['DOWNLOAD_AT'] ? \Carbon\Carbon::parse($file['DOWNLOAD_AT'])->format('d-m-Y H:i:s') : '-'}}</td>
+                            <td>{{ $file['LAST_DOWNLOAD'] ? \Carbon\Carbon::parse($file['LAST_DOWNLOAD'])->format('d-m-Y H:i:s') : '-'}}</td>
                             <td class="text-center" style="width:5%;">
                                 <button class="btn border-0">
-                                    <a href="{{ route('dts.downloadFile', ['filename' => $file]) }}" class="fa-solid fa-download"></a>
+                                    <a href="{{ url('/download/' . $key) . '?timestamp=' . now()->timestamp }}" class="fa-solid fa-download" onclick="handleDownloadClick()"></a>
                                 </button>
                             </td>
                         </tr>
-                    @endif
-                @endforeach
+                    @endforeach
+                @endif
             </tbody>
         </table>
     </div>
@@ -54,7 +58,7 @@
 <script type="text/javascript">
     $('.overlay').hide();
     // ----------------------------------------------------------TABLE ITEM----------------------------------------------------------
-    $('#dts-list').dataTable({
+    var tDtsList = $('#dts-list').DataTable({
         responsive: true,
         bInfo: false,
         scrollCollapse: true,
@@ -72,11 +76,22 @@
         lengthChange: false
     });
 
-    var tDtsList = $('#dts-list').DataTable();
     if (tDtsList.rows()[0].length > 10) {
         $('#dts-list_paginate').attr('style', 'display: block !important');
     } else {
         $('#dts-list_paginate').attr('style', 'display: none !important');
+    }
+
+    $('#downloadFile').on('click', function() {
+       
+    })
+    function handleDownloadClick() {
+        Swal.fire({
+            type: 'success',
+            title: 'File berhasil di download!',
+        }).then(function(){ 
+           window.location.reload()
+        });
     }
     // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 </script>

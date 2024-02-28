@@ -199,6 +199,7 @@
         }
       }},
 		],
+    order: [[1, 'desc']]
   });
   
   $('#purchase-item').dataTable({
@@ -308,6 +309,11 @@
     }
   });
 
+  $('#purchase-list').on('search.dt', function() {
+    tPurchaseItem.clear().draw();
+  });
+  
+
   var noPO;
   var ajaxRequestPending = false;
   var checkSj;
@@ -317,6 +323,10 @@
     tSuratJalan.clear().draw();
     tBonPenerimaanBarang.clear().draw();
     tBonReturBarang.clear().draw();
+
+    if (checkSj && checkSj.readyState !== 4) {
+      checkSj.abort();
+    }
 
     noPO = tPurchaseList.row(this).data().IDPO;
     var selectedRows = tPurchaseItem.rows( { selected: true } ).count();

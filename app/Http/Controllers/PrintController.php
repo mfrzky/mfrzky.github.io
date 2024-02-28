@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Response;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class PrintController extends Controller
@@ -71,10 +72,25 @@ class PrintController extends Controller
                         )))->first();
 
         $printPoItem = DB::table('PCL_PURCHASEORDERITEM')
-                     ->join('PCS_REFBARANG', 'PCL_PURCHASEORDERITEM.IDBARANG', '=', 'PCS_REFBARANG.IDBARANG')
-                     ->select('PCL_PURCHASEORDERITEM.*', 'PCS_REFBARANG.BARANGTIPE')
-                     ->where('IDPO',$idPO)
-                     ->get();
+                        ->join('PCS_REFBARANG', 'PCL_PURCHASEORDERITEM.IDBARANG', '=', 'PCS_REFBARANG.IDBARANG')
+                        ->join('PCL_PURCHASEORDERITEMDETAIL', 'PCL_PURCHASEORDERITEM.IDPO', '=', 'PCL_PURCHASEORDERITEMDETAIL.IDPO')
+                        ->join('PCL_PRPURCHASEITEM', function ($join) {
+                            $join->on('PCL_PURCHASEORDERITEMDETAIL.IDPR', '=', 'PCL_PRPURCHASEITEM.IDPR')
+                                ->on('PCL_PURCHASEORDERITEMDETAIL.IDBARANG', '=', 'PCL_PRPURCHASEITEM.IDBARANG');
+                        })
+                        ->select('PCL_PURCHASEORDERITEM.*', 'PCS_REFBARANG.BARANGTIPE', 'PCL_PRPURCHASEITEM.DETAIL as PR_DETAIL')
+                        ->where('PCL_PURCHASEORDERITEM.IDPO', $idPO)
+                        ->distinct()
+                        ->get();
+
+        $getPpnPbbkpb = collect(\DB::select("
+                            SELECT SUM((pm.QUANTITY * pm.HARGA) * (pp.PPNPBBKB / 100)) AS PPNPBBKB 
+                            FROM PCL_PURCHASEORDER pp
+                            JOIN pcl_purchaseorderitem pm ON pp.IDPO = pm.IDPO 
+                            WHERE pp.IDPO=:IDPO", 
+                        array(
+                            'IDPO' => $idPO 
+                        )))->first();
 
         $parafInput = base64_encode($printPoData->PARAFINPUT);
         $parafCheck = base64_encode($printPoData->PARAFCHECK);
@@ -86,7 +102,7 @@ class PrintController extends Controller
         $discount = $printPoData->DISCPERCENT != 0 ? $printPoData->DISCPERCENT * $subtotal : $printPoData->DISCAMOUNT;
         $netto    = (int)$subtotal - (int)$discount;
         
-        return view('purchase-orders-print', compact('printPoItem', 'printPoData', 'ttdApprove', 'ttdCheck', 'ttdPre', 'parafInput', 'parafCheck', 'subtotal', 'netto'));
+        return view('purchase-orders-print', compact('printPoItem', 'printPoData', 'ttdApprove', 'ttdCheck', 'ttdPre', 'parafInput', 'parafCheck', 'subtotal', 'netto', 'getPpnPbbkpb'));
     }
 
     public function prnpriviewManagementMaterial(Request $request) {
@@ -104,11 +120,18 @@ class PrintController extends Controller
 
     public function prnpriviewLaporan(Request $request) {
         $startDate = $request->get('startDate');
-        $endDate = $request->get('endDate');
+        $changeStartDate = Carbon::createFromFormat('d/m/Y', $startDate);
         
-        $WHSCODE      = 'PCM';
-        $TGL1         = $startDate;
-        $TGL2         = $endDate;
+        $endDate = $request->get('endDate');
+        $changeEndDate = Carbon::createFromFormat('d/m/Y', $startDate);
+        
+        $idsupplier = session('user')->IDSUPPLIER;
+        $getWhsCode = DB::table('PCL_REFSUPPLIER')
+                    ->where('IDSUPPLIER', $idsupplier)->first();
+
+        $WHSCODE      = $getWhsCode->WCCENTRE;
+        $TGL1         = $changeStartDate->format('Y-m-d');
+        $TGL2         = $changeEndDate->format('Y-m-d');
         $MINUS        = 'N';
 
         $result = DB::select("
@@ -192,6 +215,7 @@ class PrintController extends Controller
 
         $data['startDate'] = $startDate;
         $data['endDate'] = $endDate;
+        $data['whsCode'] = $WHSCODE;
         
         return view('laporan-print', compact(['result', 'data']));
     }

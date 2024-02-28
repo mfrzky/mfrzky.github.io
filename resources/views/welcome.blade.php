@@ -9,6 +9,7 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <link rel="stylesheet" type="text/css" href="{{ asset('/css/app.css') }}" />
+        <link rel="shortcut icon" href="{{ asset('assets/images/LogoTBP.jpg') }}" type="image/x-icon">
 
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -88,24 +89,29 @@
                 headerpd = document.getElementById(headerId);
                 mainContent = document.getElementById(mainContentId);
 
-            if (toggle && nav && bodypd && headerpd && mainContent) {
-                toggle.addEventListener("click", () => {
-                nav.classList.toggle("showNav");
-                toggle.classList.toggle("bx-x");
-                bodypd.classList.toggle("body-pd");
-                headerpd.classList.toggle("body-pd");
-                mainContent.classList.toggle("main-content-width");
-                
                 var checkClassShow = $("#nav-bar").hasClass("showNav");
                 if (checkClassShow == true) {
                     $('#divTime').show();
                 } else {
-                    console.log('tes')
                     $('#divTime').attr('style','display:none !important');
                 }
+
+            if (toggle && nav && bodypd && headerpd && mainContent) {
+                toggle.addEventListener("click", () => {
+                    nav.classList.toggle("showNav");
+                    toggle.classList.toggle("bx-x");
+                    bodypd.classList.toggle("body-pd");
+                    headerpd.classList.toggle("body-pd");
+                    mainContent.classList.toggle("main-content-width");
+                    
+                    var checkClassShow = $("#nav-bar").hasClass("showNav");
+                    if (checkClassShow == true) {
+                        $('#divTime').show();
+                    } else {
+                        $('#divTime').attr('style','display:none !important');
+                    }
                 });
-            }
-            };
+            }};
 
             showNavbar("header-toggle", "nav-bar", "body-pd", "header", "main-content");
 

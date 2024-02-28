@@ -15,6 +15,7 @@
                     <th class="text-center">No Surat Jalan</th>
                     <th class="text-center">No PO</th>
                     <th class="text-center">Status</th>
+                    <th class="text-center">Send Email</th>
                     <th class="text-center">Action</th>
                 </tr>
             </thead>
@@ -30,7 +31,7 @@
                 <span>ITEMS</span>
             </div>
             <div>
-                <button class="btn border-0 p-0" type="button" id="getSj" data-bs-toggle="modal" data-bs-target="#ModalAddItemSj">
+                <button class="btn border-0 p-0" type="button" id="getSj" data-bs-toggle="modal">
                     <i class="fa-solid fa-plus fa-xs"></i>
                 </button>
             </div>
@@ -390,7 +391,8 @@
 <script type="text/javascript">
     $( "#tgl" ).datepicker({
         format: 'dd/mm/yyyy',
-        autoclose: true
+        autoclose: true,
+        todayHighlight: true
     });
 
     $('#itemSjCheck').change(function() {
@@ -451,6 +453,13 @@
                     return 'Close'
                 } else {
                     return 'Open'
+                }
+            }},
+			{"data" : "SEND_EMAIL", "render": function(data){
+                if(data == 0 || data == null) {
+                    return 'N'
+                } else {
+                    return 'Y'
                 }
             }},
             {"data": "NOSJ" , className: "text-center", render : function (data, type, row) {
@@ -741,6 +750,10 @@
         tSuratJalanItem.clear().draw();
     });
 
+    $('#surat-jalan').on('search.dt', function() {
+        tSuratJalanItem.clear().draw();
+    });
+
     $('.overlay').hide();
     $('#controlSuratJalan').on('click', function() {
         if (getBpb == undefined) {
@@ -868,42 +881,46 @@
                         title: 'No Surat Jalan sudah terdaftar!',
                     });
                 } else {
+                    // Kirim Email
+                    $.ajax({
+                        url: "{{route('email.sendEmailSJ')}}",
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                        },
+                        type: 'GET',
+                        data: {
+                            id: formData.NOSJ,
+                            idPo: formData.IDPO,
+                        },
+                        error: function(response) {
+                            console.log(response)
+                            $('.overlay').hide();
+                            $('#loader').hide();
+                            if (response.responseJSON.message == 'Gagal kirim email!') {
+                                Swal.fire({
+                                    type: 'error',
+                                    title: 'Gagal kirim email!',
+                                    text: 'Silahkan hubungi admin!',
+                                });
+                            } else {
+                                Swal.fire({
+                                    type: 'error',
+                                    title: 'Sudah ada BPB!',
+                                });
+                            }
+                        }
+                    });
+
                     Swal.fire({
                         type: 'success',
                         title: 'Data Berhasil Ditambahkan!',
                     }).then(function(){ 
                         $('#ModalAddListSuratJalan').modal('hide'); 
-                        $('#ModalAddItemSuratJalan').modal('show');
+                        // $('#ModalAddItemSuratJalan').modal('show');
 
-                        $.ajax({
-                            url: "{{route('surat-jalan.getItemSuratJalanById')}}",
-                            type: 'GET',
-                            data: {
-                                id: $("#noPo").val(),
-                            },
-                            success: function(response) {
-                                $.each(response, function(i, item) {
-                                    tDaftarItemSj.rows.add(
-                                        [
-                                            [
-                                                i + 1,
-                                                response[i].BARANGTIPE,
-                                                parseFloat(response[i].QUANTITY).toLocaleString(),
-                                                response[i].IDBARANGMERK,
-                                                response[i].IDSATUAN,
-                                                parseFloat(response[i].HARGA).toLocaleString(),
-                                            ],
-                                        ]
-                                    ).draw()
-                                });
-                            },
-                            error: function(response) {
-                                Swal.fire({
-                                    type: 'error',
-                                    title: 'Error',
-                                });
-                            }
-                        });
+                        setTimeout(function() {
+                            tSuratJalanList.clear().draw();
+                        }, 1000);
                     });
                 }
             }, error:function(response){
@@ -1111,7 +1128,7 @@
         }).then((result) => {
             if (result.value == true) {
                 $.ajax({
-                    url: "{{route('email.sendEmail')}}",
+                    url: "{{route('email.sendEmailSJ')}}",
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
                     },
@@ -1137,10 +1154,18 @@
                     error: function(response) {
                         $('.overlay').hide();
                         $('#loader').hide();
-                        Swal.fire({
-                            type: 'error',
-                            title: 'Error',
-                        });
+                        if (response.responseJSON.message == 'Gagal kirim email!') {
+                            Swal.fire({
+                                type: 'error',
+                                title: 'Gagal kirim email!',
+                                text: 'Silahkan hubungi admin!',
+                            });
+                        } else {
+                            Swal.fire({
+                                type: 'error',
+                                title: 'Sudah ada BPB!',
+                            });
+                        }
                     }
                 });
             }
@@ -1187,52 +1212,65 @@
             dataType: "json",
             encode: true,
             success: function(data) {
-                Swal.fire({
-                    type: 'success',
-                    title: 'Data Berhasil Diubah!',
-                }).then(function(){
-                    tSuratJalanItem.clear().draw();
-                    $('#ModalEditItemSuratJalan').modal('hide');
-                    $.ajax({
-                        url: "{{route('surat-jalan-item-sj.indexItemSuratJalan')}}",
-                        type: 'GET',
-                        data: {
-                            id: noSj,
-                        },
-                        success: function(response) {
-                            if (response.length > 10) {
-                                $('#surat-jalan-item_paginate').attr('style', 'display: block !important');
-                            } else {
-                                $('#surat-jalan-item_paginate').attr('style', 'display: none !important');
-                            }
-    
-                            if (response.length > 0) {
-                                $.each(response, function(i, item) {
-                                    tSuratJalanItem.rows.add(
-                                        [
+                console.log(data)
+                if (data == 400) {
+                    Swal.fire({
+                        type: 'error',
+                        title: 'Quantity SJ tidak boleh melebihi Quantity PO',
+                    })
+                } else if (data.message == 'tidak bisa edit atau hapus'){
+                    Swal.fire({
+                        type: 'error',
+                        title: 'TIDAK BISA EDIT ATAU HAPUS, ITEM SJ INI SUDAH DITERIMA (DIINPUT DI BPB)',
+                    })
+                } else {
+                    Swal.fire({
+                        type: 'success',
+                        title: 'Data Berhasil Diubah!',
+                    }).then(function(){
+                        tSuratJalanItem.clear().draw();
+                        $('#ModalEditItemSuratJalan').modal('hide');
+                        $.ajax({
+                            url: "{{route('surat-jalan-item-sj.indexItemSuratJalan')}}",
+                            type: 'GET',
+                            data: {
+                                id: noSj,
+                            },
+                            success: function(response) {
+                                if (response.length > 10) {
+                                    $('#surat-jalan-item_paginate').attr('style', 'display: block !important');
+                                } else {
+                                    $('#surat-jalan-item_paginate').attr('style', 'display: none !important');
+                                }
+        
+                                if (response.length > 0) {
+                                    $.each(response, function(i, item) {
+                                        tSuratJalanItem.rows.add(
                                             [
-                                                response[i].DESKRIPSI,
-                                                "<div class='text-end'>"+parseFloat(response[i].QTY_SJ).toLocaleString()+"</div>",
-                                                response[i].SATUAN,
-                                                `<div class="text-center">
-                                                    <button class="btn border-0 p-0 me-3" onclick="getItemById('`+response[i].NOSJ+`','`+response[i].IDBARANGMERK+`')" data-bs-toggle="modal" data-bs-target="#ModalEditItemSuratJalan">
-                                                        <i class="fa-solid fa-pencil fa-xs"></i>
-                                                    </button>
-                                                    <button class="btn border-0 p-0" onclick="deleteItemSuratJalan('`+response[i].NOSJ+`','`+response[i].IDBARANGMERK+`')">
-                                                        <i class="fa-solid fa-trash-can fa-xs"></i>
-                                                    </button>
-                                                </div>`,
-                                            ],
-                                        ]
-                                    ).draw()
-                                });
+                                                [
+                                                    response[i].DESKRIPSI,
+                                                    "<div class='text-end'>"+parseFloat(response[i].QTY_SJ).toLocaleString()+"</div>",
+                                                    response[i].SATUAN,
+                                                    `<div class="text-center">
+                                                        <button class="btn border-0 p-0 me-3" onclick="getItemById('`+response[i].NOSJ+`','`+response[i].IDBARANGMERK+`')" data-bs-toggle="modal" data-bs-target="#ModalEditItemSuratJalan">
+                                                            <i class="fa-solid fa-pencil fa-xs"></i>
+                                                        </button>
+                                                        <button class="btn border-0 p-0" onclick="deleteItemSuratJalan('`+response[i].NOSJ+`','`+response[i].IDBARANGMERK+`')">
+                                                            <i class="fa-solid fa-trash-can fa-xs"></i>
+                                                        </button>
+                                                    </div>`,
+                                                ],
+                                            ]
+                                        ).draw()
+                                    });
+                                }
+                            },
+                            error: function(response) {
+                                
                             }
-                        },
-                        error: function(response) {
-                            
-                        }
+                        });
                     });
-                });
+                }
             }
         });
 
@@ -1240,35 +1278,43 @@
     }); 
 
     $('#getSj').on('click', function() {
-        $.ajax({
-            url: "{{route('surat-jalan.getItemSuratJalanById')}}",
-            type: 'GET',
-            data: {
-                id: idPoItem,
-            },
-            success: function(response) {
-                $.each(response, function(i, item) {
-                    tDaftarItemSj.rows.add(
-                        [
+        if (noSj == undefined) {
+            Swal.fire({
+                type: 'warning',
+                title: 'Silahkan pilih List Surat Jalan!',
+            });
+        } else {
+            $('#ModalAddItemSj').modal('show');
+            $.ajax({
+                url: "{{route('surat-jalan.getItemSuratJalanById')}}",
+                type: 'GET',
+                data: {
+                    id: idPoItem,
+                },
+                success: function(response) {
+                    $.each(response, function(i, item) {
+                        tDaftarItemSj.rows.add(
                             [
-                                i + 1,
-                                response[i].BARANGTIPE,
-                                parseFloat(response[i].QUANTITY).toLocaleString(),
-                                response[i].IDBARANGMERK,
-                                response[i].IDSATUAN,
-                                parseFloat(response[i].HARGA).toLocaleString(),
-                            ],
-                        ]
-                    ).draw()
-                });
-            },
-            error: function(response) {
-                Swal.fire({
-                    type: 'error',
-                    title: 'Error',
-                });
-            }
-        });
+                                [
+                                    i + 1,
+                                    response[i].BARANGTIPE,
+                                    parseFloat(response[i].QUANTITY).toLocaleString(),
+                                    response[i].IDBARANGMERK,
+                                    response[i].IDSATUAN,
+                                    parseFloat(response[i].HARGA).toLocaleString(),
+                                ],
+                            ]
+                        ).draw()
+                    });
+                },
+                error: function(response) {
+                    Swal.fire({
+                        type: 'error',
+                        title: 'Error',
+                    });
+                }
+            });
+        }
     })
 
     function deleteList(noSj) {
@@ -1287,12 +1333,19 @@
                         id: noSj,
                     },
                     success: function(response) {
-                        Swal.fire({
-                            type: 'success',
-                            title: 'Sukses hapus data!',
-                        }).then(function(){ 
-                            location.reload();
-                        });
+                        if (response.message == 'tidak bisa edit atau hapus'){
+                            Swal.fire({
+                                type: 'error',
+                                title: 'TIDAK BISA EDIT ATAU HAPUS, ITEM SJ INI SUDAH DITERIMA (DIINPUT DI BPB)',
+                            })
+                        } else {
+                            Swal.fire({
+                                type: 'success',
+                                title: 'Sukses hapus data!',
+                            }).then(function(){ 
+                                location.reload();
+                            });
+                        }
                     },
                     error: function(response) {
                         Swal.fire({

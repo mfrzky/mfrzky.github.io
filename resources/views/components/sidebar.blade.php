@@ -1,4 +1,4 @@
-<div class="l-navbar" id="nav-bar">
+<div class="l-navbar showNav" id="nav-bar">
     <nav class="nav">
       <div>
           <div class="header_toggle nav_logo">
@@ -6,6 +6,12 @@
               <span class="nav_logo-name">Menu</span>
           </div>
           <div class="nav_list">
+              @if (session('user')->IS_ADMIN == 1 || session('user')->IS_ADMIN != NULL)
+                <a href="{{route('admin-menu.index')}}" class="nav_link {{ Request::path() == 'admin' ? 'active' : '' }}">
+                  <i class="fa-solid fa-user fa-lg"></i>
+                  <span class="nav_name">Admin</span>
+                </a>
+              @endif
               <a href="{{route('purchase-orders.index')}}" class="nav_link {{ Request::path() == 'purchase-orders' ? 'active' : '' }}">
                 <i class="fa-solid fa-cart-shopping fa-lg"></i>
                 <span class="nav_name">Purchase Orders</span>

@@ -35,7 +35,7 @@
             <span>ITEMS</span>
         </div>
         <div>
-            <button class="btn border-0 p-0" type="button" data-bs-toggle="modal" data-bs-target="#ModalInvoicesItemType">
+            <button class="btn border-0 p-0" type="button" data-bs-toggle="modal" data-bs-target="#ModalDaftarSuratJalan">
                 <i class="fa-solid fa-plus fa-xs"></i>
             </button>
         </div>
@@ -494,6 +494,10 @@
             tInvoicesList.rows('.selected').nodes().each((row) => row.classList.remove('selected'));
             classList.add('selected');
         }
+    });
+
+    $('#invoices-list').on('search.dt', function() {
+        tInvoicesItem.clear().draw();
     });
 
     var noInvoices = "";

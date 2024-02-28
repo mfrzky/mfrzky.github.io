@@ -24,7 +24,12 @@ class LaporanController extends Controller {
             return DataTables::of($getList)->make(true);
         }
 
-        return view('laporan');
+        $getWcCentre = DB::table('PCL_REFSUPPLIER')
+                       ->where('IDSUPPLIER', $idsupplier)
+                       ->select('WCCENTRE')
+                       ->first();
+
+        return view('laporan', compact('getWcCentre'));
     }
 
     public function indexStockCode(Request $request) {

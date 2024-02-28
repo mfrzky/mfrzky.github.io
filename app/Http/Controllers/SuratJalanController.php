@@ -58,7 +58,7 @@ class SuratJalanController extends Controller {
 
     public function indexItemSuratJalan(Request $request) {
         $id = $request->get('id');
-        $getPoItem = DB::table('VDR_SURATJALAN')
+        $getSjItem = DB::table('VDR_SURATJALAN')
                      ->join('VDR_SURATJALANITEM', 'VDR_SURATJALAN.NOSJ', '=', 'VDR_SURATJALANITEM.NOSJ')
                      ->join('INV_REFSATUAN', 'VDR_SURATJALANITEM.IDSATUAN', '=', 'INV_REFSATUAN.IDSATUAN')
                      ->select(
@@ -70,32 +70,36 @@ class SuratJalanController extends Controller {
                      ->where('VDR_SURATJALAN.NOSJ', '=', $id)
                      ->get();
 
-        return response()->json($getPoItem);
+        foreach ($getSjItem as $key => $item) {
+            $getSjItem[$key] = array_map('utf8_encode', (array) $item);
+        }
+
+        return response()->json($getSjItem);
     }
 
     public function indexItemBonPenerimaanBarang(Request $request) {
         $id = $request->get('id');
         $sql = 'SELECT
                     "WHS_STOCKIN".*,
-                    "INV_REFSATUAN"."DESKRIPSI" as "SATUAN", 
+                    "INV_REFSATUAN"."DESKRIPSI" AS "SATUAN",
                     "PCS_REFBARANGMERK"."BARANGTIPE",
                     "PCS_REFBARANGMERK"."IDBARANG",
-                    "D"."QUANTITY" as "QTY_BPB",
+                    "D"."QUANTITY" AS "QTY_BPB",
                     "C"."QUANTITY" AS "QTY_SJ"
                 FROM WHS_STOCKIN
                 INNER JOIN (
-                    SELECT NOSJ, SUM(QUANTITY) AS QUANTITY
+                    SELECT NOSJ, IDBARANGMERK, SUM(QUANTITY) AS QUANTITY
                     FROM VDR_SURATJALANITEM
-                    GROUP BY NOSJ
-                ) C ON (WHS_STOCKIN.NOSJ=C.NOSJ)
+                    GROUP BY NOSJ, IDBARANGMERK
+                ) C ON (WHS_STOCKIN.NOSJ = C.NOSJ)
                 INNER JOIN (
-                        SELECT IDSTOCKIN,IDBARANGMERK,IDSATUAN, SUM(QUANTITY) AS QUANTITY
-                        FROM WHS_STOCKINITEM
-                        GROUP BY IDSTOCKIN, IDBARANGMERK, IDSATUAN
-                ) D ON (WHS_STOCKIN.IDSTOCKIN=D.IDSTOCKIN)
-                INNER JOIN "PCS_REFBARANGMERK" ON "D"."IDBARANGMERK" = "PCS_REFBARANGMERK"."IDBARANGMERK"
-                INNER JOIN "INV_REFSATUAN" on "D"."IDSATUAN" = "INV_REFSATUAN"."IDSATUAN"
-                WHERE "WHS_STOCKIN"."NOSJ" = ?';
+                    SELECT IDSTOCKIN, IDBARANGMERK, IDSATUAN, SUM(QUANTITY) AS QUANTITY
+                    FROM WHS_STOCKINITEM
+                    GROUP BY IDSTOCKIN, IDBARANGMERK, IDSATUAN
+                ) D ON (WHS_STOCKIN.IDSTOCKIN = D.IDSTOCKIN AND C.IDBARANGMERK = D.IDBARANGMERK)
+                INNER JOIN "PCS_REFBARANGMERK" ON D."IDBARANGMERK" = "PCS_REFBARANGMERK"."IDBARANGMERK"
+                INNER JOIN "INV_REFSATUAN" ON D."IDSATUAN" = "INV_REFSATUAN"."IDSATUAN"
+                WHERE WHS_STOCKIN."NOSJ" = ?';
         $getBpbItem = DB::select($sql, array($id));
 
         return response()->json($getBpbItem);
@@ -162,6 +166,7 @@ class SuratJalanController extends Controller {
                     'TANGGAL' => date('Y-m-d', strtotime($date)),
                     'IDPO' => $request->IDPO,
                     'STATUS' => 0,
+                    'SEND_EMAIL' => 1,
                     'CREATEDAT' => date('Y-m-d H:i:s'),
                 ]);
 
@@ -301,20 +306,47 @@ class SuratJalanController extends Controller {
             'QUANTITY' => $_POST['QTY_SJ'],
         ];
 
-        $post = DB::table('VDR_SURATJALANITEM')
-                ->where('NOSJ', '=', $id)
-                ->where('IDBARANGMERK', '=', $idBarangMerk)
-                ->update($values);
-                
-        return response()->json(200);
+        $checkQuantity = DB::table('VDR_SURATJALANITEM')
+                        ->select('VDR_SURATJALANITEM.QUANTITY')
+                        ->join('PCL_PURCHASEORDERITEM', 'PCL_PURCHASEORDERITEM.IDPO', '=', 'VDR_SURATJALANITEM.IDPO')
+                        ->where('VDR_SURATJALANITEM.NOSJ', $id)
+                        ->where('VDR_SURATJALANITEM.IDBARANGMERK', $idBarangMerk)
+                        ->first();
+        
+        if ($values['QUANTITY'] > $checkQuantity->QUANTITY) {
+            return response()->json(400);
+        } else {
+            try { 
+                $post = DB::table('VDR_SURATJALANITEM')
+                        ->where('NOSJ', '=', $id)
+                        ->where('IDBARANGMERK', '=', $idBarangMerk)
+                        ->update($values);
+                        
+                return response()->json(200);
+             } catch(\Illuminate\Database\QueryException $ex){ 
+                $errorMessage = $ex->getMessage(); 
+
+                if (stripos($errorMessage, 'TIDAK BISA EDIT ATAU HAPUS, ITEM SJ INI SUDAH DITERIMA (DIINPUT DI BPB)') !== false) {
+                    return response()->json(['message' => 'tidak bisa edit atau hapus']);
+                }
+            }
+        }
     }
 
     public function deleteListSuratJalanById(Request $request) {
-        $id = $request->get('id');
+        try { 
+            $id = $request->get('id');
 
-        $post = DB::table('VDR_SURATJALAN')->where('NOSJ', '=', $id)->delete();
+            $post = DB::table('VDR_SURATJALAN')->where('NOSJ', '=', $id)->delete();
 
-        return response()->json(200);
+            return response()->json(200);
+         } catch(\Illuminate\Database\QueryException $ex){ 
+            $errorMessage = $ex->getMessage(); 
+
+            if (stripos($errorMessage, 'TIDAK BISA EDIT ATAU HAPUS, DATA SJ INI SUDAH DITERIMA (DIINPUT DI BPB)') !== false) {
+                return response()->json(['message' => 'tidak bisa edit atau hapus']);
+            }
+        }
     }
 
     public function deleteItemSuratJalanById(Request $request) {
